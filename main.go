@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -19,9 +22,29 @@ type Product struct {
 	Price        float64
 }
 
+/*
 var products = []Product{
 	{Id: 1, Name: "Oil - Margarine", Quantity: 439, Code_value: "S82254D", Is_published: true, Expiration: "15/12/2021", Price: 71.42},
 	{Id: 2, Name: "Pineapple - Canned, Rings", Quantity: 345, Code_value: "M4637", Is_published: true, Expiration: "09/08/2021", Price: 352.79},
+}
+*/
+
+var products []Product
+
+func OpenProducts(filename string) (err error) {
+
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return
+	}
+
+	err = json.Unmarshal(data, &products)
+	if err != nil {
+		fmt.Println("Error encoding json records:", err)
+		return
+	}
+	return
 }
 
 func GetProducts() []Product {
@@ -57,17 +80,10 @@ func GetProductByPriceGt(price float64) []Product {
 // CONTROLLER -------------------------------------------------------------------------------------------
 
 func Pong(ctx *gin.Context) {
-	// request
-
-	// process
-
-	// response
 	ctx.String(http.StatusOK, "pong")
 }
 
 func Products(ctx *gin.Context) {
-	// request
-
 	// process
 	products = GetProducts()
 
@@ -107,7 +123,10 @@ func ProductsSearch(ctx *gin.Context) {
 
 // SERVER -------------------------------------------------------------------------------------------
 
+const filename = "products.json"
+
 func main() {
+	OpenProducts(filename)
 	server := gin.Default()
 
 	server.GET("/ping", Pong)
