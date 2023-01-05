@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,13 +14,13 @@ import (
 // SERVICE -------------------------------------------------------------------------------------------
 
 type Product struct {
-	Id           int
-	Name         string
-	Quantity     int
-	Code_value   string
-	Is_published bool
-	Expiration   string
-	Price        float64
+	Id           int     `json:"id,omitempty"`
+	Name         string  `json:"name"`
+	Quantity     int     `json:"quantity"`
+	Code_value   string  `json:"code_value"`
+	Is_published bool    `json:"is_published"`
+	Expiration   string  `json:"expiration"`
+	Price        float64 `json:"price"`
 }
 
 /*
@@ -30,6 +31,8 @@ var products = []Product{
 */
 
 var products []Product
+
+var lastID int
 
 func OpenProducts(filename string) (err error) {
 
@@ -44,6 +47,8 @@ func OpenProducts(filename string) (err error) {
 		fmt.Println("Error encoding json records:", err)
 		return
 	}
+
+	lastID = len(products)
 	return
 }
 
@@ -77,19 +82,45 @@ func GetProductByPriceGt(price float64) []Product {
 	return filtered
 }
 
+func InvalidJSONBody(newProduct Product) (ok bool) {
+	if newProduct.Name == "" || newProduct.Quantity == 0 || newProduct.Code_value == "" || newProduct.Expiration == "" || newProduct.Price == 0 {
+		return true
+	}
+	return
+}
+
+func InvalidCodeValue(newProduct Product, products []Product) (ok bool) {
+	for _, p := range products {
+		if newProduct.Code_value == p.Code_value {
+			return true
+		}
+	}
+	return
+}
+
+func InvalidExpiration(newProduct Product) (ok bool) {
+	_, err := time.Parse("02/01/2006", newProduct.Expiration)
+	if err != nil {
+		return true
+	}
+	return
+}
+
 // CONTROLLER -------------------------------------------------------------------------------------------
+
+// GET
 
 func Pong(ctx *gin.Context) {
 	// response
 	ctx.String(http.StatusOK, "pong")
 }
 
-func Products(ctx *gin.Context) {
+func GETProducts(ctx *gin.Context) {
 	// process
 	products = GetProducts()
 
 	// response
-	ctx.JSON(http.StatusOK, gin.H{"message": "succeed to get all websites", "data": products})
+	ctx.JSON(http.StatusOK, gin.H{"message": "succeed to get all products", "data": products})
 }
 
 func ProductsId(ctx *gin.Context) {
@@ -104,7 +135,7 @@ func ProductsId(ctx *gin.Context) {
 	products := GetProductById(id)
 
 	// response
-	ctx.JSON(http.StatusOK, gin.H{"message": "succeed to get all websites", "data": products})
+	ctx.JSON(http.StatusOK, gin.H{"message": "succeed to get all products", "data": products})
 }
 
 func ProductsSearch(ctx *gin.Context) {
@@ -119,7 +150,54 @@ func ProductsSearch(ctx *gin.Context) {
 	products := GetProductByPriceGt(price)
 
 	// response
-	ctx.JSON(http.StatusOK, gin.H{"message": "succeed to get all websites", "data": products})
+	ctx.JSON(http.StatusOK, gin.H{"message": "succeed to get all products", "data": products})
+}
+
+// POST
+
+func POSTProducts(ctx *gin.Context) {
+	// request
+	var request Product
+
+	/*
+		token := ctx.GetHeader("token")
+		if token != "1234" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"message": "invalid token", "data": nil})
+			return
+		}
+	*/
+
+	err := ctx.ShouldBindJSON(&request)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error(), "data": nil})
+		return
+	}
+
+	//Todo: si Is_published == "" se debe bindear con JSON a false
+
+	if InvalidJSONBody(request) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid JSON, (only id and is_published can be empty)", "data": nil})
+		return
+	}
+
+	if InvalidCodeValue(request, products) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "there is already a product with that code", "data": nil})
+		return
+	}
+
+	if InvalidExpiration(request) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid expiration date, (format: DD/MM/YYYY)", "data": nil})
+		return
+	}
+
+	// process
+
+	lastID++
+	request.Id = lastID
+	products = append(products, request)
+
+	// response
+	ctx.JSON(http.StatusOK, gin.H{"message": "succeed to upload a product", "data": request})
 }
 
 // SERVER -------------------------------------------------------------------------------------------
@@ -131,9 +209,10 @@ func main() {
 	server := gin.Default()
 
 	server.GET("/ping", Pong)
-	server.GET("/products", Products)
 
 	products := server.Group("/products")
+	products.POST("/", POSTProducts)
+	products.GET("/", GETProducts)
 	products.GET("/:id", ProductsId)
 	products.GET("/search", ProductsSearch)
 
