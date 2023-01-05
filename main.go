@@ -80,6 +80,7 @@ func GetProductByPriceGt(price float64) []Product {
 // CONTROLLER -------------------------------------------------------------------------------------------
 
 func Pong(ctx *gin.Context) {
+	// response
 	ctx.String(http.StatusOK, "pong")
 }
 
@@ -131,8 +132,10 @@ func main() {
 
 	server.GET("/ping", Pong)
 	server.GET("/products", Products)
-	server.GET("/products/:id", ProductsId)
-	server.GET("/products/search", ProductsSearch)
+
+	products := server.Group("/products")
+	products.GET("/:id", ProductsId)
+	products.GET("/search", ProductsSearch)
 
 	server.Run(":8080")
 }
