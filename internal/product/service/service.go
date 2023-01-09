@@ -1,9 +1,6 @@
 package services
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/enzofaliMELI/web-server/internal/product/models"
@@ -13,6 +10,7 @@ var Products []models.Product
 
 var LastID int
 
+/*
 func OpenProducts(filename string) (err error) {
 
 	data, err := os.ReadFile(filename)
@@ -30,6 +28,7 @@ func OpenProducts(filename string) (err error) {
 	LastID = len(Products)
 	return
 }
+*/
 
 func GetProducts() []models.Product {
 	return Products

@@ -97,6 +97,7 @@ func POSTProducts(ctx *gin.Context) {
 		return
 	}
 
+	// The services recieve a product struct
 	product := models.Product{
 		Id:           0,
 		Name:         request.Name,
