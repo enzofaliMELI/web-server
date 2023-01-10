@@ -2,26 +2,28 @@ package product
 
 import (
 	"time"
+
+	"github.com/enzofaliMELI/web-server/internal/domain"
 )
 
 type Service interface {
-	GetAll() ([]Product, error)
-	Store(id int, name string, quantity int, code_value string, is_published bool, expiration string, price float64) (Product, error)
-	Update(id int, name string, quantity int, code_value string, is_published bool, expiration string, price float64) (Product, error)
-	UpdateName(id int, name string) (Product, error)
+	GetAll() ([]domain.Product, error)
+	Store(id int, name string, quantity int, code_value string, is_published bool, expiration string, price float64) (domain.Product, error)
+	Update(id int, name string, quantity int, code_value string, is_published bool, expiration string, price float64) (domain.Product, error)
+	UpdateName(id int, name string) (domain.Product, error)
 	Delete(id int) error
 }
 
 // -------------------------------- GET Methods --------------------------------
 
-func GetProducts() []Product {
+func GetProducts() []domain.Product {
 	return Products
 }
 
-func GetProductById(id int) []Product {
+func GetProductById(id int) []domain.Product {
 	products := GetProducts()
 
-	var filtered []Product
+	var filtered []domain.Product
 	for _, product := range products {
 		if id != 0 && (product.Id != id) {
 			continue
@@ -31,10 +33,10 @@ func GetProductById(id int) []Product {
 	return filtered
 }
 
-func GetProductByPriceGt(price float64) []Product {
+func GetProductByPriceGt(price float64) []domain.Product {
 	products := GetProducts()
 
-	var filtered []Product
+	var filtered []domain.Product
 	for _, product := range products {
 		if price != 0 && (product.Price <= price) {
 			continue

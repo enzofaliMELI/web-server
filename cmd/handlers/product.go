@@ -82,37 +82,49 @@ func StoreProduct(ctx *gin.Context) {
 		return
 	}
 
+	// validate missing JSON key:values
 	validate := validator.New()
 	if err := validate.Struct(&request); err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error(), "data": nil})
 		return
 	}
 
+	// Validate Code Value
 	if product.InvalidCodeValue(request.Code_value) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "there is already a product with that code", "data": nil})
 		return
 	}
 
+	// Validate Expiration date format
 	if product.InvalidExpiration(request.Expiration) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid expiration date, (format: DD/MM/YYYY)", "data": nil})
 		return
 	}
 
 	// process
-	prod := product.Product{
-		Id:           0,
-		Name:         request.Name,
-		Quantity:     request.Quantity,
-		Code_value:   request.Code_value,
-		Is_published: request.Is_published,
-		Expiration:   request.Expiration,
-		Price:        request.Price,
-	}
-
-	product.LastID++
-	prod.Id = product.LastID
-	product.Products = append(product.Products, prod)
+	prod, _ := product.SaveProduct(request.Name, request.Quantity, request.Code_value, request.Is_published, request.Expiration, request.Price)
 
 	// response
-	ctx.JSON(http.StatusCreated, response.Ok("succeed to upload a product", request))
+	ctx.JSON(http.StatusCreated, response.Ok("succeed to upload a product", prod))
+}
+
+// -------------------------------- PUT Methods --------------------------------
+func UpdateProduct(ctx *gin.Context) {
+	// request
+
+	// process
+
+	// response
+}
+
+// -------------------------------- PATCH Methods --------------------------------
+
+func UpdateProductName(ctx *gin.Context) {
+
+}
+
+// -------------------------------- DELETE Methods --------------------------------
+
+func DeleteProduct(ctx *gin.Context) {
+
 }
