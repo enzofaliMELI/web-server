@@ -6,28 +6,27 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/enzofaliMELI/web-server/cmd/handlers"
+	"github.com/enzofaliMELI/web-server/cmd/routes"
+	"github.com/enzofaliMELI/web-server/internal/domain"
 	"github.com/enzofaliMELI/web-server/internal/product"
 )
 
-const filename = "../products.json"
-
 func main() {
 	// Read all files
-	product.OpenProducts(filename)
+	db := []domain.Product{}
+	product.OpenProducts(&db)
+
+	//repository := product.NewRepository(&db)
+	//service := product.NewService(repository)
+	//handler := handler.NewProduct(service)
 
 	// Server
 	server := gin.Default()
 
 	// Router
 	server.GET("/ping", handlers.Pong)
-	products := server.Group("/products")
-	products.POST("/", handlers.StoreProduct)
-	products.GET("/", handlers.GetAllProducts)
-	products.GET("/:id", handlers.GetProductsId)
-	products.GET("/search", handlers.GetProductsSearch)
-	products.PUT("/:id", handlers.UpdateProduct)
-	products.PATCH("/:id", handlers.UpdateProductName)
-	products.DELETE("/:id", handlers.DeleteProduct)
+	routes := routes.NewRouter(server, &db)
+	routes.SetRoutes()
 
 	// Start Server
 	if err := server.Run(":8080"); err != nil {
