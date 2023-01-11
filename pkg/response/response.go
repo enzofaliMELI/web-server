@@ -1,8 +1,8 @@
 package response
 
 type Response struct {
-	Message string
-	Data    interface{}
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }
 
 func Ok(message string, data interface{}) *Response {

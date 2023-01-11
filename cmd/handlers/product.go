@@ -15,7 +15,10 @@ import (
 )
 
 var (
-	ErrUnauthorized = errors.New("error: invalid token")
+	ErrUnauthorized      = errors.New("error: invalid token")
+	ErrInvalidId         = errors.New("error: invalid Id")
+	ErrInvalidCodeValue  = errors.New("invalid expiration date, (format: DD/MM/YYYY)")
+	ErrInvalidExpiration = errors.New("there is already a product with that code")
 )
 
 type Product struct {
@@ -39,12 +42,12 @@ func (p *Product) GetAll() gin.HandlerFunc {
 		// Process
 		products, err := p.s.GetAll()
 		if err != nil {
-			ctx.JSON(500, nil)
+			ctx.JSON(http.StatusInternalServerError, nil)
 			return
 		}
 
 		// Response
-		ctx.JSON(http.StatusOK, gin.H{"message": "succeed to get all products", "data": products})
+		ctx.JSON(http.StatusOK, response.Ok("succeed to get all products", products))
 	}
 }
 
@@ -53,18 +56,18 @@ func (p *Product) GetById() gin.HandlerFunc {
 		// Request
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "failed to parse number", "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(ErrInvalidId))
 			return
 		}
 		// Process
 		products, err := p.s.GetById(id)
 		if err != nil {
-			ctx.JSON(500, nil)
+			ctx.JSON(http.StatusInternalServerError, nil)
 			return
 		}
 
 		// Response
-		ctx.JSON(http.StatusOK, gin.H{"message": "succeed to get all products", "data": products})
+		ctx.JSON(http.StatusOK, response.Ok("succeed to get product", products))
 	}
 }
 
@@ -73,18 +76,18 @@ func (p *Product) GetPriceGt() gin.HandlerFunc {
 		// Request
 		price, err := strconv.ParseFloat(ctx.Query("priceGt"), 64)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "failed to parse number", "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(ErrInvalidId))
 			return
 		}
 		// Process
 		products, err := p.s.GetPriceGt(price)
 		if err != nil {
-			ctx.JSON(500, nil)
+			ctx.JSON(http.StatusInternalServerError, nil)
 			return
 		}
 
 		// Response
-		ctx.JSON(http.StatusOK, gin.H{"message": "succeed to get all products", "data": products})
+		ctx.JSON(http.StatusOK, response.Ok("succeed to get all products", products))
 	}
 }
 
@@ -104,32 +107,33 @@ func (p *Product) Store() gin.HandlerFunc {
 		err := ctx.ShouldBindJSON(&request)
 		fmt.Println(request)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error(), "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(err))
 			return
 		}
 
 		// validate missing JSON key:values
 		validate := validator.New()
 		if err := validate.Struct(&request); err != nil {
-			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error(), "data": nil})
+			ctx.JSON(http.StatusUnprocessableEntity, response.Err(err))
 			return
 		}
+
 		// Validate Code Value
 		if p.s.InvalidCodeValue(request.Code_value, -1) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "there is already a product with that code", "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(ErrInvalidCodeValue))
 			return
 		}
 
 		// Validate Expiration date format
 		if p.s.InvalidExpiration(request.Expiration) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid expiration date, (format: DD/MM/YYYY)", "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(ErrInvalidExpiration))
 			return
 		}
 
 		// Process
 		product, err := p.s.Store(request.Name, request.Quantity, request.Code_value, request.Is_published, request.Expiration, request.Price)
 		if err != nil {
-			ctx.JSON(500, nil)
+			ctx.JSON(http.StatusInternalServerError, nil)
 			return
 		}
 
@@ -152,40 +156,40 @@ func (p *Product) UpdateProduct() gin.HandlerFunc {
 
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid ID", "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(ErrInvalidId))
 			return
 		}
 
 		err = ctx.ShouldBindJSON(&request)
 		fmt.Println(request)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error(), "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(err))
 			return
 		}
 
 		// validate missing JSON key:values
 		validate := validator.New()
 		if err := validate.Struct(&request); err != nil {
-			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error(), "data": nil})
+			ctx.JSON(http.StatusUnprocessableEntity, response.Err(err))
 			return
 		}
 
 		// Validate Code Value
 		if p.s.InvalidCodeValue(request.Code_value, id) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "there is already a product with that code", "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(ErrInvalidCodeValue))
 			return
 		}
 
 		// Validate Expiration date format
 		if p.s.InvalidExpiration(request.Expiration) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid expiration date, (format: DD/MM/YYYY)", "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(ErrInvalidExpiration))
 			return
 		}
 
 		// Process
 		product, err := p.s.Update(id, request.Name, request.Quantity, request.Code_value, request.Is_published, request.Expiration, request.Price)
 		if err != nil {
-			ctx.JSON(500, nil)
+			ctx.JSON(http.StatusInternalServerError, nil)
 			return
 		}
 
@@ -208,21 +212,21 @@ func (p *Product) UpdatePATCH() gin.HandlerFunc {
 
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid ID", "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(ErrInvalidId))
 			return
 		}
 
 		err = ctx.ShouldBindJSON(&request)
 		fmt.Println(request)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error(), "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(err))
 			return
 		}
 
 		// Validate Code Value
 		if request.Code_value != nil {
 			if p.s.InvalidCodeValue(*request.Code_value, id) {
-				ctx.JSON(http.StatusBadRequest, gin.H{"message": "there is already a product with that code", "data": nil})
+				ctx.JSON(http.StatusBadRequest, response.Err(ErrInvalidCodeValue))
 				return
 			}
 		}
@@ -230,7 +234,7 @@ func (p *Product) UpdatePATCH() gin.HandlerFunc {
 		// Process
 		product, err := p.s.UpdatePATCH(id, request)
 		if err != nil {
-			ctx.JSON(404, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusNotFound, nil)
 			return
 		}
 
@@ -253,14 +257,14 @@ func (p *Product) DeleteProduct() gin.HandlerFunc {
 
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid ID", "data": nil})
+			ctx.JSON(http.StatusBadRequest, response.Err(ErrInvalidId))
 			return
 		}
 
 		// Process
 		err = p.s.Delete(id)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error(), "data": nil})
+			ctx.JSON(http.StatusBadRequest, nil)
 			return
 		}
 

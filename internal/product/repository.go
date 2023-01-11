@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/enzofaliMELI/web-server/internal/domain"
+	"github.com/enzofaliMELI/web-server/pkg/store"
 )
 
 var (
@@ -38,14 +39,12 @@ const filename = "../products.json"
 func OpenProducts(db *[]domain.Product) (err error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return
+		return fmt.Errorf("%w. %s", err, "error opening file:")
 	}
 
 	err = json.Unmarshal(data, &db)
 	if err != nil {
-		fmt.Println("Error encoding json records:", err)
-		return
+		return fmt.Errorf("%w. %s", err, "error encoding JSON records:")
 	}
 	return
 }
@@ -57,7 +56,14 @@ func NewRepository(db *[]domain.Product) Repository {
 // --------------------------------- Read methods -----------------------------------
 
 func (r *repository) GetAll() ([]domain.Product, error) {
-	return *r.db, nil
+	// Normal Implementation
+	// return *r.db, nil
+
+	// Store Implementation
+	var product []domain.Product
+	storage := store.NewStorage(filename)
+	storage.Get(&product)
+	return product, nil
 }
 
 func (r *repository) LastID() (int, error) {
@@ -70,7 +76,7 @@ func (r *repository) GetById(id int) (domain.Product, error) {
 			return product, nil
 		}
 	}
-	return domain.Product{}, fmt.Errorf("%w. %s", ErrNotFound, "website does not exist")
+	return domain.Product{}, fmt.Errorf("%w. %s", ErrNotFound, "product does not exist")
 }
 
 func (r *repository) GetPriceGt(price float64) ([]domain.Product, error) {
@@ -110,6 +116,11 @@ func (r *repository) Store(name string, quantity int, code_value string, is_publ
 	}
 
 	*r.db = append(*r.db, prod)
+
+	// Save JSON
+	storage := store.NewStorage(filename)
+	storage.Set(r.db)
+
 	return prod, nil
 }
 
@@ -136,7 +147,7 @@ func (r *repository) Update(id int, name string, quantity int, code_value string
 	}
 
 	if !update {
-		return domain.Product{}, fmt.Errorf("%w. %s", ErrNotFound, "Error en Repository: website does not exist")
+		return domain.Product{}, fmt.Errorf("%w. %s", ErrNotFound, "product does not exist")
 	}
 
 	return newProduct, nil
@@ -175,7 +186,7 @@ func (r *repository) UpdatePATCH(id int, request domain.PatchRequest) (domain.Pr
 	}
 
 	if !update {
-		return domain.Product{}, fmt.Errorf("%w. %s", ErrNotFound, "website does not exist")
+		return domain.Product{}, fmt.Errorf("%w. %s", ErrNotFound, "product does not exist")
 	}
 
 	return prod, nil
@@ -194,7 +205,7 @@ func (r *repository) Delete(id int) error {
 	}
 
 	if !delete {
-		return fmt.Errorf("%w. %s", ErrNotFound, "website does not exist")
+		return fmt.Errorf("%w. %s", ErrNotFound, "product does not exist")
 	}
 
 	*r.db = append((*r.db)[:index], (*r.db)[index+1:]...)
