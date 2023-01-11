@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -204,7 +205,7 @@ func (p *Product) UpdateProduct() gin.HandlerFunc {
 }
 
 // -------------------------------- PATCH Methods --------------------------------
-// Generalizar !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// Todo: Arreglar validacion ##################################################################################################################
 func (p *Product) UpdateProductName() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Request
@@ -229,11 +230,19 @@ func (p *Product) UpdateProductName() gin.HandlerFunc {
 			return
 		}
 
-		// Validate Name
-		if request.Name == "" {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "required product name", "data": nil})
+		// Validation
+		err = json.NewDecoder(ctx.Request.Body).Decode(&request)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, nil)
 			return
 		}
+
+		/*
+			if request.Name == "" {
+				ctx.JSON(http.StatusBadRequest, gin.H{"message": "required product name", "data": nil})
+				return
+			}
+		*/
 
 		// Process
 		product, err := p.s.UpdateName(id, request.Name)

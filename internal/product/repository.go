@@ -127,8 +127,8 @@ func (r *repository) Update(id int, name string, quantity int, code_value string
 
 	update := false
 
-	for i, product := range *r.db {
-		if product.Id == id {
+	for i := range *r.db {
+		if (*r.db)[i].Id == id {
 			(*r.db)[i] = newProduct
 			update = true
 			break
@@ -147,11 +147,11 @@ func (r *repository) UpdateName(id int, name string) (domain.Product, error) {
 
 	update := false
 
-	for _, product := range *r.db {
-		if product.Id == id {
-			product.Name = name
+	for i := range *r.db {
+		if (*r.db)[i].Id == id {
+			(*r.db)[i].Name = name
 			update = true
-			prod = product
+			prod = (*r.db)[i]
 			break
 		}
 	}
