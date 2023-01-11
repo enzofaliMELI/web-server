@@ -15,7 +15,7 @@ type Service interface {
 	// Write methods
 	Store(name string, quantity int, code_value string, is_published bool, expiration string, price float64) (domain.Product, error)
 	Update(id int, name string, quantity int, code_value string, is_published bool, expiration string, price float64) (domain.Product, error)
-	UpdateName(id int, name string) (domain.Product, error)
+	UpdatePATCH(id int, request domain.PatchRequest) (domain.Product, error)
 	Delete(id int) error
 	// Validation
 	InvalidCodeValue(codeVal string, id int) (ok bool)
@@ -64,8 +64,8 @@ func (s *service) Update(id int, name string, quantity int, code_value string, i
 	return s.r.Update(id, name, quantity, code_value, is_published, expiration, price)
 }
 
-func (s *service) UpdateName(id int, name string) (domain.Product, error) {
-	return s.r.UpdateName(id, name)
+func (s *service) UpdatePATCH(id int, request domain.PatchRequest) (domain.Product, error) {
+	return s.r.UpdatePATCH(id, request)
 }
 
 func (s *service) Delete(id int) error {

@@ -32,6 +32,6 @@ func (r *Router) SetProduct() {
 	products.GET("/:id", handler.GetById())
 	products.GET("/search", handler.GetPriceGt())
 	products.PUT("/:id", handler.UpdateProduct())
-	products.PATCH("/:id", handler.UpdateProductName())
+	products.PATCH("/:id", handler.UpdatePATCH())
 	products.DELETE("/:id", handler.DeleteProduct())
 }

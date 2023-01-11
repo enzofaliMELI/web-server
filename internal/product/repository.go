@@ -22,7 +22,7 @@ type Repository interface {
 	// Write methods
 	Store(name string, quantity int, code_value string, is_published bool, expiration string, price float64) (domain.Product, error)
 	Update(id int, name string, quantity int, code_value string, is_published bool, expiration string, price float64) (domain.Product, error)
-	UpdateName(id int, name string) (domain.Product, error)
+	UpdatePATCH(id int, request domain.PatchRequest) (domain.Product, error)
 	Delete(id int) error
 	// Validation methods
 	InvalidCodeValue(codeVal string, id int) (ok bool)
@@ -142,14 +142,32 @@ func (r *repository) Update(id int, name string, quantity int, code_value string
 	return newProduct, nil
 }
 
-func (r *repository) UpdateName(id int, name string) (domain.Product, error) {
+func (r *repository) UpdatePATCH(id int, request domain.PatchRequest) (domain.Product, error) {
 	var prod domain.Product
 
 	update := false
 
 	for i := range *r.db {
 		if (*r.db)[i].Id == id {
-			(*r.db)[i].Name = name
+			if request.Name != nil {
+				(*r.db)[i].Name = *request.Name
+			}
+			if request.Quantity != nil {
+				(*r.db)[i].Quantity = *request.Quantity
+			}
+			if request.Code_value != nil {
+				(*r.db)[i].Code_value = *request.Code_value
+			}
+			if request.Is_published != nil {
+				(*r.db)[i].Is_published = *request.Is_published
+			}
+			if request.Expiration != nil {
+				(*r.db)[i].Expiration = *request.Expiration
+			}
+			if request.Price != nil {
+				(*r.db)[i].Price = *request.Price
+			}
+
 			update = true
 			prod = (*r.db)[i]
 			break

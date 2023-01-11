@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/enzofaliMELI/web-server/internal/domain"
 	"github.com/enzofaliMELI/web-server/internal/product"
 	"github.com/enzofaliMELI/web-server/pkg/response"
 	"github.com/gin-gonic/gin"
@@ -19,24 +20,6 @@ var (
 
 type Product struct {
 	s product.Service
-}
-
-type Request struct {
-	Name         string  `json:"name" validate:"required"`
-	Quantity     int     `json:"quantity" validate:"required"`
-	Code_value   string  `json:"code_value" validate:"required"`
-	Is_published bool    `json:"is_published"`
-	Expiration   string  `json:"expiration" validate:"required"`
-	Price        float64 `json:"price" validate:"required"`
-}
-
-type PatchRequest struct {
-	Name         *string  `json:"name"`
-	Quantity     *int     `json:"quantity"`
-	Code_value   *string  `json:"code_value"`
-	Is_published *bool    `json:"is_published"`
-	Expiration   *string  `json:"expiration"`
-	Price        *float64 `json:"price"`
 }
 
 func NewProduct(s product.Service) *Product {
@@ -110,7 +93,7 @@ func (p *Product) GetPriceGt() gin.HandlerFunc {
 func (p *Product) Store() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Request
-		var request Request
+		var request domain.Request
 
 		token := ctx.GetHeader("token")
 		if token != os.Getenv("TOKEN") {
@@ -159,7 +142,7 @@ func (p *Product) Store() gin.HandlerFunc {
 func (p *Product) UpdateProduct() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Request
-		var request Request
+		var request domain.Request
 
 		token := ctx.GetHeader("token")
 		if token != os.Getenv("TOKEN") {
@@ -186,6 +169,7 @@ func (p *Product) UpdateProduct() gin.HandlerFunc {
 			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error(), "data": nil})
 			return
 		}
+
 		// Validate Code Value
 		if p.s.InvalidCodeValue(request.Code_value, id) {
 			ctx.JSON(http.StatusBadRequest, gin.H{"message": "there is already a product with that code", "data": nil})
@@ -211,11 +195,11 @@ func (p *Product) UpdateProduct() gin.HandlerFunc {
 }
 
 // -------------------------------- PATCH Methods --------------------------------
-// Todo: Arreglar validacion ##################################################################################################################
-func (p *Product) UpdateProductName() gin.HandlerFunc {
+// Todo: Arreglar ##################################################################################################################
+func (p *Product) UpdatePATCH() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Request
-		var request Request
+		var request domain.PatchRequest
 
 		token := ctx.GetHeader("token")
 		if token != os.Getenv("TOKEN") {
@@ -236,22 +220,16 @@ func (p *Product) UpdateProductName() gin.HandlerFunc {
 			return
 		}
 
-		// Validation
-		/*
-			err = json.NewDecoder(ctx.Request.Body).Decode(&request)
-			if err != nil {
-				ctx.JSON(http.StatusBadRequest, nil)
+		// Validate Code Value
+		if request.Code_value != nil {
+			if p.s.InvalidCodeValue(*request.Code_value, id) {
+				ctx.JSON(http.StatusBadRequest, gin.H{"message": "there is already a product with that code", "data": nil})
 				return
 			}
-		*/
-
-		if request.Name == "" {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "required product name", "data": nil})
-			return
 		}
 
 		// Process
-		product, err := p.s.UpdateName(id, request.Name)
+		product, err := p.s.UpdatePATCH(id, request)
 		if err != nil {
 			ctx.JSON(404, gin.H{"error": err.Error()})
 			return
