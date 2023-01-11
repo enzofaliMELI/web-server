@@ -195,7 +195,6 @@ func (p *Product) UpdateProduct() gin.HandlerFunc {
 }
 
 // -------------------------------- PATCH Methods --------------------------------
-// Todo: Arreglar ##################################################################################################################
 func (p *Product) UpdatePATCH() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Request
