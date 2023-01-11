@@ -44,6 +44,7 @@ func createRequestTest(method string, url string, body string) (*http.Request, *
 	return request, httptest.NewRecorder()
 }
 
+// Test de Exito ---------------------------------------------------------------------------------
 func Test_GetAll(t *testing.T) {
 	// Arrange
 	server := createServerProductsTest()
@@ -62,15 +63,88 @@ func Test_GetAll(t *testing.T) {
 	assert.True(t, len(body) > 0)
 }
 
+func Test_GetById(t *testing.T) {
+	// Arrange
+	server := createServerProductsTest()
+	request, response := createRequestTest(http.MethodGet, "/products/:1", "")
+
+	// Act
+	server.ServeHTTP(response, request)
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Assert
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.True(t, len(body) > 0)
+}
+
 func Test_Store(t *testing.T) {
 	// Arrange
 	server := createServerProductsTest()
-	request, response := createRequestTest(http.MethodPost, "/products/", `{"id":502,"name":"Chicken - Soup Base","quantity":479,"code_value":"0swilj3","is_published":false,"expiration":"11/12/2021","price":515.93}`)
+	request, response := createRequestTest(http.MethodPost, "/products/", `{"name":"Chicken - Soup Base","quantity":479,"code_value":"0swipplj3","is_published":false,"expiration":"11/12/2021","price":515.93}`)
+
+	// Act
+	server.ServeHTTP(response, request)
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Assert
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.True(t, len(body) > 0)
+	assert.Equal(t, response.Header().Get("Content-Type"), "application/json; charset=utf-8")
+}
+
+func Test_Delete(t *testing.T) {
+	// Arrange
+	server := createServerProductsTest()
+	request, response := createRequestTest(http.MethodPost, "/products/:1", "")
 
 	// Act
 	server.ServeHTTP(response, request)
 
 	// Assert
 	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, response.Header().Get("Content-Type"), "application/json; charset=utf-8")
+}
+
+// Test de Fallo ---------------------------------------------------------------------------------
+func Test_GetById_BadReq(t *testing.T) {
+	// Arrange
+	server := createServerProductsTest()
+	request, response := createRequestTest(http.MethodGet, "/products/:owi0+", "")
+
+	// Act
+	server.ServeHTTP(response, request)
+
+	// Assert
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+}
+
+func Test_Delete_BadReq(t *testing.T) {
+	// Arrange
+	server := createServerProductsTest()
+	request, response := createRequestTest(http.MethodPost, "/products/:owi0+", "")
+
+	// Act
+	server.ServeHTTP(response, request)
+
+	// Assert
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+}
+
+func Test_Store_BadReq(t *testing.T) {
+	// Arrange
+	server := createServerProductsTest()
+	request, response := createRequestTest(http.MethodPost, "/products/", `{`)
+
+	// Act
+	server.ServeHTTP(response, request)
+
+	// Assert
+	assert.Equal(t, http.StatusBadRequest, response.Code)
 }

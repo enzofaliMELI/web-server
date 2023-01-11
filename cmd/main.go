@@ -24,10 +24,6 @@ func main() {
 	db := []domain.Product{}
 	product.OpenProducts(&db)
 
-	//repository := product.NewRepository(&db)
-	//service := product.NewService(repository)
-	//handler := handler.NewProduct(service)
-
 	// Server
 	server := gin.Default()
 
