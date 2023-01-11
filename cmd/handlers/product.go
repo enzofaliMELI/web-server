@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/enzofaliMELI/web-server/internal/product"
@@ -12,8 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator"
 )
-
-const secretKey = "1234"
 
 var (
 	ErrUnauthorized = errors.New("error: invalid token")
@@ -30,6 +28,15 @@ type Request struct {
 	Is_published bool    `json:"is_published"`
 	Expiration   string  `json:"expiration" validate:"required"`
 	Price        float64 `json:"price" validate:"required"`
+}
+
+type PatchRequest struct {
+	Name         *string  `json:"name"`
+	Quantity     *int     `json:"quantity"`
+	Code_value   *string  `json:"code_value"`
+	Is_published *bool    `json:"is_published"`
+	Expiration   *string  `json:"expiration"`
+	Price        *float64 `json:"price"`
 }
 
 func NewProduct(s product.Service) *Product {
@@ -106,7 +113,7 @@ func (p *Product) Store() gin.HandlerFunc {
 		var request Request
 
 		token := ctx.GetHeader("token")
-		if token != secretKey {
+		if token != os.Getenv("TOKEN") {
 			ctx.JSON(http.StatusUnauthorized, response.Err(ErrUnauthorized))
 			return
 		}
@@ -155,7 +162,7 @@ func (p *Product) UpdateProduct() gin.HandlerFunc {
 		var request Request
 
 		token := ctx.GetHeader("token")
-		if token != secretKey {
+		if token != os.Getenv("TOKEN") {
 			ctx.JSON(http.StatusUnauthorized, response.Err(ErrUnauthorized))
 			return
 		}
@@ -179,7 +186,6 @@ func (p *Product) UpdateProduct() gin.HandlerFunc {
 			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error(), "data": nil})
 			return
 		}
-		// arreglar no validar el mismo codigo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		// Validate Code Value
 		if p.s.InvalidCodeValue(request.Code_value, id) {
 			ctx.JSON(http.StatusBadRequest, gin.H{"message": "there is already a product with that code", "data": nil})
@@ -212,7 +218,7 @@ func (p *Product) UpdateProductName() gin.HandlerFunc {
 		var request Request
 
 		token := ctx.GetHeader("token")
-		if token != secretKey {
+		if token != os.Getenv("TOKEN") {
 			ctx.JSON(http.StatusUnauthorized, response.Err(ErrUnauthorized))
 			return
 		}
@@ -231,18 +237,18 @@ func (p *Product) UpdateProductName() gin.HandlerFunc {
 		}
 
 		// Validation
-		err = json.NewDecoder(ctx.Request.Body).Decode(&request)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, nil)
-			return
-		}
-
 		/*
-			if request.Name == "" {
-				ctx.JSON(http.StatusBadRequest, gin.H{"message": "required product name", "data": nil})
+			err = json.NewDecoder(ctx.Request.Body).Decode(&request)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, nil)
 				return
 			}
 		*/
+
+		if request.Name == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"message": "required product name", "data": nil})
+			return
+		}
 
 		// Process
 		product, err := p.s.UpdateName(id, request.Name)
@@ -263,7 +269,7 @@ func (p *Product) DeleteProduct() gin.HandlerFunc {
 
 		// Request
 		token := ctx.GetHeader("token")
-		if token != secretKey {
+		if token != os.Getenv("TOKEN") {
 			ctx.JSON(http.StatusUnauthorized, response.Err(ErrUnauthorized))
 			return
 		}
