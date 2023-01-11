@@ -59,7 +59,7 @@ func (r *repository) GetAll() ([]domain.Product, error) {
 	// Normal Implementation
 	// return *r.db, nil
 
-	// Store Implementation
+	// Store Implementation #########################################################################################################################
 	var product []domain.Product
 	storage := store.NewStorage(filename)
 	storage.Get(&product)
@@ -117,7 +117,7 @@ func (r *repository) Store(name string, quantity int, code_value string, is_publ
 
 	*r.db = append(*r.db, prod)
 
-	// Save JSON
+	// Save JSON #########################################################################################################################
 	storage := store.NewStorage(filename)
 	storage.Set(r.db)
 
