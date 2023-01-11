@@ -25,7 +25,7 @@ type Repository interface {
 	UpdateName(id int, name string) (domain.Product, error)
 	Delete(id int) error
 	// Validation methods
-	InvalidCodeValue(codeVal string) (ok bool)
+	InvalidCodeValue(codeVal string, id int) (ok bool)
 }
 
 type repository struct {
@@ -66,7 +66,7 @@ func (r *repository) LastID() (int, error) {
 
 func (r *repository) GetById(id int) (domain.Product, error) {
 	for _, product := range *r.db {
-		if id != 0 && (product.Id != id) {
+		if id != 0 && (product.Id == id) {
 			return product, nil
 		}
 	}
@@ -85,9 +85,9 @@ func (r *repository) GetPriceGt(price float64) ([]domain.Product, error) {
 	return filtered, nil
 }
 
-func (r *repository) InvalidCodeValue(codeVal string) (ok bool) {
-	for _, p := range *r.db {
-		if codeVal == p.Code_value {
+func (r *repository) InvalidCodeValue(codeVal string, id int) (ok bool) {
+	for _, product := range *r.db {
+		if codeVal == product.Code_value && id != product.Id {
 			return true
 		}
 	}
@@ -97,7 +97,6 @@ func (r *repository) InvalidCodeValue(codeVal string) (ok bool) {
 // --------------------------------- Write methods ----------------------------------
 
 func (r *repository) Store(name string, quantity int, code_value string, is_published bool, expiration string, price float64) (domain.Product, error) {
-
 	r.lastID++
 
 	prod := domain.Product{
@@ -128,16 +127,16 @@ func (r *repository) Update(id int, name string, quantity int, code_value string
 
 	update := false
 
-	for _, product := range *r.db {
+	for i, product := range *r.db {
 		if product.Id == id {
-			product = newProduct
+			(*r.db)[i] = newProduct
 			update = true
 			break
 		}
 	}
 
 	if !update {
-		return domain.Product{}, fmt.Errorf("%w. %s", ErrNotFound, "website does not exist")
+		return domain.Product{}, fmt.Errorf("%w. %s", ErrNotFound, "Error en Repository: website does not exist")
 	}
 
 	return newProduct, nil

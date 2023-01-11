@@ -18,7 +18,7 @@ type Service interface {
 	UpdateName(id int, name string) (domain.Product, error)
 	Delete(id int) error
 	// Validation
-	InvalidCodeValue(codeVal string) (ok bool)
+	InvalidCodeValue(codeVal string, id int) (ok bool)
 	InvalidExpiration(expiration string) (ok bool)
 }
 
@@ -74,8 +74,8 @@ func (s *service) Delete(id int) error {
 
 // -------------------------------- Validation Methods --------------------------------
 
-func (s *service) InvalidCodeValue(codeVal string) (ok bool) {
-	return s.r.InvalidCodeValue(codeVal)
+func (s *service) InvalidCodeValue(codeVal string, id int) (ok bool) {
+	return s.r.InvalidCodeValue(codeVal, id)
 }
 
 func (r *service) InvalidExpiration(expiration string) (ok bool) {

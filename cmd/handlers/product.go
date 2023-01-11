@@ -124,8 +124,14 @@ func (p *Product) Store() gin.HandlerFunc {
 			return
 		}
 		// Validate Code Value
-		if p.s.InvalidCodeValue(request.Code_value) {
+		if p.s.InvalidCodeValue(request.Code_value, -1) {
 			ctx.JSON(http.StatusBadRequest, gin.H{"message": "there is already a product with that code", "data": nil})
+			return
+		}
+
+		// Validate Expiration date format
+		if p.s.InvalidExpiration(request.Expiration) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid expiration date, (format: DD/MM/YYYY)", "data": nil})
 			return
 		}
 
@@ -172,26 +178,33 @@ func (p *Product) UpdateProduct() gin.HandlerFunc {
 			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error(), "data": nil})
 			return
 		}
-
+		// arreglar no validar el mismo codigo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		// Validate Code Value
-		if p.s.InvalidCodeValue(request.Code_value) {
+		if p.s.InvalidCodeValue(request.Code_value, id) {
 			ctx.JSON(http.StatusBadRequest, gin.H{"message": "there is already a product with that code", "data": nil})
 			return
 		}
 
-		// process
+		// Validate Expiration date format
+		if p.s.InvalidExpiration(request.Expiration) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid expiration date, (format: DD/MM/YYYY)", "data": nil})
+			return
+		}
+
+		// Process
 		product, err := p.s.Update(id, request.Name, request.Quantity, request.Code_value, request.Is_published, request.Expiration, request.Price)
 		if err != nil {
 			ctx.JSON(500, nil)
 			return
 		}
 
-		// response
+		// Response
 		ctx.JSON(http.StatusCreated, response.Ok("succeed to update a product", product))
 	}
 }
 
 // -------------------------------- PATCH Methods --------------------------------
+// Generalizar !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 func (p *Product) UpdateProductName() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Request
@@ -203,7 +216,7 @@ func (p *Product) UpdateProductName() gin.HandlerFunc {
 			return
 		}
 
-		id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid ID", "data": nil})
 			return
@@ -221,14 +234,15 @@ func (p *Product) UpdateProductName() gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{"message": "required product name", "data": nil})
 			return
 		}
-		// process
-		product, err := p.s.UpdateName(int(id), request.Name)
+
+		// Process
+		product, err := p.s.UpdateName(id, request.Name)
 		if err != nil {
 			ctx.JSON(404, gin.H{"error": err.Error()})
 			return
 		}
 
-		// response
+		// Response
 		ctx.JSON(http.StatusCreated, response.Ok("succeed to update the Name of a product", product))
 	}
 
