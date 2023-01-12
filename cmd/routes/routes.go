@@ -28,12 +28,13 @@ func (r *Router) SetProduct() {
 	handler := handlers.NewProduct(service)
 
 	products := r.en.Group("/products")
-	products.GET("/", handler.GetAll())
-	products.GET("/:id", handler.GetById())
-	products.GET("/search", handler.GetPriceGt())
-
-	products.POST("/", middleware.TokenAuthMiddleware(), handler.Store())
-	products.PUT("/:id", middleware.TokenAuthMiddleware(), handler.UpdateProduct())
-	products.PATCH("/:id", middleware.TokenAuthMiddleware(), handler.UpdatePATCH())
-	products.DELETE("/:id", middleware.Middlewares(handler.DeleteProduct())...)
+	{
+		products.GET("/", handler.GetAll())
+		products.GET("/:id", handler.GetById())
+		products.GET("/search", handler.GetPriceGt())
+		products.POST("/", middleware.TokenAuthMiddleware(), handler.Store())
+		products.PUT("/:id", middleware.TokenAuthMiddleware(), handler.UpdateProduct())
+		products.PATCH("/:id", middleware.TokenAuthMiddleware(), handler.UpdatePATCH())
+		products.DELETE("/:id", middleware.Middlewares(handler.DeleteProduct())...)
+	}
 }

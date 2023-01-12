@@ -6,7 +6,6 @@ import (
 	"github.com/enzofaliMELI/web-server/internal/domain"
 )
 
-// Controller
 type Service interface {
 	// Read methods
 	GetAll() ([]domain.Product, error)

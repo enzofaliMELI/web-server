@@ -1,4 +1,4 @@
-package test
+package handlers
 
 import (
 	"bytes"
@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/enzofaliMELI/web-server/cmd/handlers"
 
 	"github.com/enzofaliMELI/web-server/cmd/routes"
 	"github.com/enzofaliMELI/web-server/internal/domain"
@@ -29,7 +27,6 @@ func createServerProductsTest() *gin.Engine {
 	server := gin.Default()
 
 	// Router
-	server.GET("/ping", handlers.Pong)
 	routes := routes.NewRouter(server, &db)
 	routes.SetRoutes()
 
