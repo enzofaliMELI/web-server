@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/enzofaliMELI/web-server/cmd/handlers"
+	"github.com/enzofaliMELI/web-server/cmd/middleware"
 	"github.com/enzofaliMELI/web-server/internal/domain"
 	"github.com/enzofaliMELI/web-server/internal/product"
 	"github.com/gin-gonic/gin"
@@ -31,8 +32,8 @@ func (r *Router) SetProduct() {
 	products.GET("/:id", handler.GetById())
 	products.GET("/search", handler.GetPriceGt())
 
-	products.POST("/", handlers.TokenAuthMiddleware(), handler.Store())
-	products.PUT("/:id", handlers.TokenAuthMiddleware(), handler.UpdateProduct())
-	products.PATCH("/:id", handlers.TokenAuthMiddleware(), handler.UpdatePATCH())
-	products.DELETE("/:id", handlers.Middlewares(handler.DeleteProduct())...)
+	products.POST("/", middleware.TokenAuthMiddleware(), handler.Store())
+	products.PUT("/:id", middleware.TokenAuthMiddleware(), handler.UpdateProduct())
+	products.PATCH("/:id", middleware.TokenAuthMiddleware(), handler.UpdatePATCH())
+	products.DELETE("/:id", middleware.Middlewares(handler.DeleteProduct())...)
 }

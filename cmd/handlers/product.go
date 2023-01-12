@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/enzofaliMELI/web-server/internal/domain"
@@ -17,8 +16,8 @@ import (
 var (
 	ErrUnauthorized      = errors.New("error: invalid token")
 	ErrInvalidId         = errors.New("error: invalid Id")
-	ErrInvalidCodeValue  = errors.New("invalid expiration date, (format: DD/MM/YYYY)")
-	ErrInvalidExpiration = errors.New("there is already a product with that code")
+	ErrInvalidCodeValue  = errors.New("there is already a product with that code")
+	ErrInvalidExpiration = errors.New("invalid expiration date, (format: DD/MM/YYYY)")
 )
 
 type Product struct {
@@ -27,34 +26,6 @@ type Product struct {
 
 func NewProduct(s product.Service) *Product {
 	return &Product{s: s}
-}
-
-// ------------------------------ Auth Middleware -------------------------------
-func FirstMiddleware() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		fmt.Println("First Middleware")
-		ctx.Next()
-	}
-}
-
-func TokenAuthMiddleware() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		token := ctx.GetHeader("token")
-		if token != os.Getenv("TOKEN") {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Err(ErrUnauthorized))
-			return
-		}
-		ctx.Next()
-	}
-}
-
-func Middlewares(f gin.HandlerFunc) []gin.HandlerFunc {
-	list := []gin.HandlerFunc{
-		FirstMiddleware(),
-		TokenAuthMiddleware(),
-	}
-	list = append(list, f)
-	return list
 }
 
 // -------------------------------- GET Methods --------------------------------
@@ -67,10 +38,8 @@ func Pong(ctx *gin.Context) {
 // @Summary List products
 // @Tags Products
 // @Description get products
-// @Accept json
 // @Produce json
-// @Param token header string true "token"
-// @Success 200 {object} web.Response
+// @Success 200 {object} string
 // @Router /products [get]
 func (p *Product) GetAll() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -138,7 +107,7 @@ func (p *Product) GetPriceGt() gin.HandlerFunc {
 // @Produce json
 // @Param token header string true "token"
 // @Param product body request true "Product to store"
-// @Success 200 {object} web.Response
+// @Success 200 {object} string
 // @Router /products [post]
 
 func (p *Product) Store() gin.HandlerFunc {

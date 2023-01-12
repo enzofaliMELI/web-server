@@ -42,10 +42,6 @@ func main() {
 	// Server
 	server := gin.Default()
 
-	// Middlewares
-	// If want to apply the Auth to all endpoints
-	// server.Use(handlers.TokenAuthMiddleware())
-
 	// Swagger
 	docs.SwaggerInfo.Host = os.Getenv("HOST")
 	server.GET("docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
