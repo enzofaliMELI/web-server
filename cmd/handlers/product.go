@@ -29,12 +29,49 @@ func NewProduct(s product.Service) *Product {
 	return &Product{s: s}
 }
 
+// ------------------------------ Auth Middleware -------------------------------
+func FirstMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		fmt.Println("First Middleware")
+		ctx.Next()
+	}
+}
+
+func TokenAuthMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		token := ctx.GetHeader("token")
+		if token != os.Getenv("TOKEN") {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Err(ErrUnauthorized))
+			return
+		}
+		ctx.Next()
+	}
+}
+
+func Middlewares(f gin.HandlerFunc) []gin.HandlerFunc {
+	list := []gin.HandlerFunc{
+		FirstMiddleware(),
+		TokenAuthMiddleware(),
+	}
+	list = append(list, f)
+	return list
+}
+
 // -------------------------------- GET Methods --------------------------------
 
 func Pong(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "pong")
 }
 
+// List Products godoc
+// @Summary List products
+// @Tags Products
+// @Description get products
+// @Accept json
+// @Produce json
+// @Param token header string true "token"
+// @Success 200 {object} web.Response
+// @Router /products [get]
 func (p *Product) GetAll() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Request
@@ -93,16 +130,21 @@ func (p *Product) GetPriceGt() gin.HandlerFunc {
 
 // -------------------------------- POST Methods --------------------------------
 
+// StoreProducts godoc
+// @Summary Store products
+// @Tags Products
+// @Description store products
+// @Accept json
+// @Produce json
+// @Param token header string true "token"
+// @Param product body request true "Product to store"
+// @Success 200 {object} web.Response
+// @Router /products [post]
+
 func (p *Product) Store() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Request
 		var request domain.Request
-
-		token := ctx.GetHeader("token")
-		if token != os.Getenv("TOKEN") {
-			ctx.JSON(http.StatusUnauthorized, response.Err(ErrUnauthorized))
-			return
-		}
 
 		err := ctx.ShouldBindJSON(&request)
 		fmt.Println(request)
@@ -147,12 +189,6 @@ func (p *Product) UpdateProduct() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Request
 		var request domain.Request
-
-		token := ctx.GetHeader("token")
-		if token != os.Getenv("TOKEN") {
-			ctx.JSON(http.StatusUnauthorized, response.Err(ErrUnauthorized))
-			return
-		}
 
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
@@ -204,12 +240,6 @@ func (p *Product) UpdatePATCH() gin.HandlerFunc {
 		// Request
 		var request domain.PatchRequest
 
-		token := ctx.GetHeader("token")
-		if token != os.Getenv("TOKEN") {
-			ctx.JSON(http.StatusUnauthorized, response.Err(ErrUnauthorized))
-			return
-		}
-
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, response.Err(ErrInvalidId))
@@ -247,13 +277,6 @@ func (p *Product) UpdatePATCH() gin.HandlerFunc {
 // -------------------------------- DELETE Methods --------------------------------
 func (p *Product) DeleteProduct() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-
-		// Request
-		token := ctx.GetHeader("token")
-		if token != os.Getenv("TOKEN") {
-			ctx.JSON(http.StatusUnauthorized, response.Err(ErrUnauthorized))
-			return
-		}
 
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {

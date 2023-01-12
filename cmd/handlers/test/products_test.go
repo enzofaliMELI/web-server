@@ -66,7 +66,7 @@ func Test_GetAll(t *testing.T) {
 func Test_GetById(t *testing.T) {
 	// Arrange
 	server := createServerProductsTest()
-	request, response := createRequestTest(http.MethodGet, "/products/:1", "")
+	request, response := createRequestTest(http.MethodGet, "/products/1", "")
 
 	// Act
 	server.ServeHTTP(response, request)
