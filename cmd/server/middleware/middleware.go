@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/enzofaliMELI/web-server/cmd/handlers"
+	handlers "github.com/enzofaliMELI/web-server/cmd/server/handlers"
 	"github.com/enzofaliMELI/web-server/pkg/response"
 	"github.com/gin-gonic/gin"
 )

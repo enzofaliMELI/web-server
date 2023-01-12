@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
-	"github.com/enzofaliMELI/web-server/cmd/docs"
-	"github.com/enzofaliMELI/web-server/cmd/handlers"
-	"github.com/enzofaliMELI/web-server/cmd/routes"
+	"github.com/enzofaliMELI/web-server/cmd/server/docs"
+	"github.com/enzofaliMELI/web-server/cmd/server/handlers"
+	"github.com/enzofaliMELI/web-server/cmd/server/routes"
 	"github.com/enzofaliMELI/web-server/internal/domain"
 	"github.com/enzofaliMELI/web-server/internal/product"
 

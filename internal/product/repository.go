@@ -34,7 +34,7 @@ type repository struct {
 	lastID int
 }
 
-const filename = "../products.json"
+const filename = "products.json"
 
 func OpenProducts(db *[]domain.Product) (err error) {
 	data, err := os.ReadFile(filename)
