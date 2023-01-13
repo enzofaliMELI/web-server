@@ -1,12 +1,12 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"time"
 
-	handlers "github.com/enzofaliMELI/web-server/cmd/server/handlers"
 	"github.com/enzofaliMELI/web-server/pkg/response"
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +22,7 @@ func TokenAuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token := ctx.GetHeader("token")
 		if token != os.Getenv("TOKEN") {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Err(handlers.ErrUnauthorized))
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Err(errors.New("error: invalid token")))
 			return
 		}
 		ctx.Next()

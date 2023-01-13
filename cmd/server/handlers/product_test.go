@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	//////
 	"bytes"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/enzofaliMELI/web-server/cmd/routes"
+	"github.com/enzofaliMELI/web-server/cmd/server/middleware"
 	"github.com/enzofaliMELI/web-server/internal/domain"
 	"github.com/enzofaliMELI/web-server/internal/product"
 	"github.com/gin-gonic/gin"
@@ -27,8 +28,20 @@ func createServerProductsTest() *gin.Engine {
 	server := gin.Default()
 
 	// Router
-	routes := routes.NewRouter(server, &db)
-	routes.SetRoutes()
+	repository := product.NewRepository(&db)
+	service := product.NewService(repository)
+	handler := NewProduct(service)
+
+	products := server.Group("/products")
+	{
+		products.GET("/", handler.GetAll())
+		products.GET("/:id", handler.GetById())
+		products.GET("/search", handler.GetPriceGt())
+		products.POST("/", middleware.TokenAuthMiddleware(), handler.Store())
+		products.PUT("/:id", middleware.TokenAuthMiddleware(), handler.UpdateProduct())
+		products.PATCH("/:id", middleware.TokenAuthMiddleware(), handler.UpdatePATCH())
+		products.DELETE("/:id", middleware.Middlewares(handler.DeleteProduct())...)
+	}
 
 	return server
 }

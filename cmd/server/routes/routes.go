@@ -1,8 +1,8 @@
 package routes
 
 import (
-	handlers "github.com/enzofaliMELI/web-server/cmd/server/handlers"
-	middleware "github.com/enzofaliMELI/web-server/cmd/server/middleware"
+	"github.com/enzofaliMELI/web-server/cmd/server/handlers"
+	"github.com/enzofaliMELI/web-server/cmd/server/middleware"
 	"github.com/enzofaliMELI/web-server/internal/domain"
 	"github.com/enzofaliMELI/web-server/internal/product"
 	"github.com/gin-gonic/gin"
